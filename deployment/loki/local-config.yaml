@@ -8,14 +8,21 @@ ingester:
   wal:
     dir: "/tmp/wal"
   lifecycler:
-    address: 127.0.0.1
+    address: "0.0.0.0"
     ring:
       kvstore:
-        store: inmemory
+        store: memberlist
       replication_factor: 1
     final_sleep: 0s
   chunk_idle_period: 5m
   chunk_retain_period: 30s
+
+memberlist:
+  bind_addr:
+    - "0.0.0.0"
+  bind_port: 7946            # ← was a list, now a single integer
+  join_members:
+    - "loki:7946"
 
 schema_config:
   configs:
@@ -35,12 +42,12 @@ storage_config:
     directory: /tmp/loki/chunks
 
 limits_config:
-  enforce_metric_name: false
+  allow_structured_metadata: false
   reject_old_samples: true
   reject_old_samples_max_age: 168h
 
 chunk_store_config:
-  max_look_back_period: 0
+  # (your existing chunk_store settings)
 
 table_manager:
   chunk_tables_provisioning:

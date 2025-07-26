@@ -35,7 +35,7 @@ services:
       - xpack.security.enabled=false
     image: elasticsearch:${ELASTICSEARCH_VERSION}
     ports:
-      - published: 9200
+      - published: 9201 # DataHub is using 9200 for its Elastic Search
         target: 9200
     networks:
       - temporal-network
@@ -46,6 +46,7 @@ services:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_USER: ${POSTGRES_USER}
+      PGPORT: ${POSTGRES_DEFAULT_PORT}
     image: postgres:${POSTGRESQL_VERSION}
     expose:
       - ${POSTGRES_DEFAULT_PORT}
@@ -66,7 +67,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PWD=${POSTGRES_PASSWORD}
       - POSTGRES_SEEDS=postgresql
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - DYNAMIC_CONFIG_FILE_PATH=/etc/temporal/config/dynamicconfig/development-sql.yaml
       - TEMPORAL_HISTORY_NAMESPACEDEFAULT_ARCHIVAL_FILESTORE=enabled
       - TEMPORAL_VISIBILITY_NAMESPACEDEFAULT_ARCHIVAL_FILESTORE=enabled
       - SERVICES=history
@@ -81,7 +82,7 @@ services:
     ports:
       - published: 7234
         target: 7234
-      - published: 8000
+      - published: 8200
         target: 8000
     restart: on-failure
     volumes:
@@ -100,7 +101,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PWD=${POSTGRES_PASSWORD}
       - POSTGRES_SEEDS=postgresql
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - DYNAMIC_CONFIG_FILE_PATH=/etc/temporal/config/dynamicconfig/development-sql.yaml
       - TEMPORAL_HISTORY_NAMESPACEDEFAULT_ARCHIVAL_FILESTORE=enabled
       - TEMPORAL_VISIBILITY_NAMESPACEDEFAULT_ARCHIVAL_FILESTORE=enabled
       - SERVICES=matching
@@ -133,7 +134,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PWD=${POSTGRES_PASSWORD}
       - POSTGRES_SEEDS=postgresql
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - DYNAMIC_CONFIG_FILE_PATH=/etc/temporal/config/dynamicconfig/development-sql.yaml
       - TEMPORAL_HISTORY_NAMESPACEDEFAULT_ARCHIVAL_FILESTORE=enabled
       - TEMPORAL_VISIBILITY_NAMESPACEDEFAULT_ARCHIVAL_FILESTORE=enabled
       - SERVICES=frontend
@@ -144,6 +145,7 @@ services:
       - ES_VERSION=v7
       - TEMPORAL_CLI_ADDRESS=temporal-nginx:7233
       - TEMPORAL_ADDRESS=temporal-nginx:7233
+
     image: temporalio/server:${TEMPORAL_VERSION}
     ports:
       - published: 7237
@@ -167,7 +169,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PWD=${POSTGRES_PASSWORD}
       - POSTGRES_SEEDS=postgresql
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - DYNAMIC_CONFIG_FILE_PATH=/etc/temporal/config/dynamicconfig/development-sql.yaml
       - TEMPORAL_HISTORY_NAMESPACEDEFAULT_ARCHIVAL_FILESTORE=enabled
       - TEMPORAL_VISIBILITY_NAMESPACEDEFAULT_ARCHIVAL_FILESTORE=enabled
       - SERVICES=frontend
@@ -204,7 +206,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PWD=${POSTGRES_PASSWORD}
       - POSTGRES_SEEDS=postgresql
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - DYNAMIC_CONFIG_FILE_PATH=/etc/temporal/config/dynamicconfig/development-sql.yaml
       - TEMPORAL_HISTORY_NAMESPACEDEFAULT_ARCHIVAL_FILESTORE=enabled
       - TEMPORAL_VISIBILITY_NAMESPACEDEFAULT_ARCHIVAL_FILESTORE=enabled
       - SERVICES=worker
@@ -227,7 +229,7 @@ services:
       - ./dynamicconfig:/etc/temporal/config/dynamicconfig
     networks:
       - temporal-network
-  
+
   temporal-admin-tools:
     <<: *loki-logging
     container_name: temporal-admin-tools
@@ -252,7 +254,8 @@ services:
       - TEMPORAL_ADDRESS=temporal-nginx:7233
     image: temporalio/ui:${TEMPORAL_UI_VERSION}
     ports:
-      - 8080:8080
+      - published: 8082 # DataHub using 8080 and 8081
+        target: 8080
     networks:
       - temporal-network
 
@@ -343,3 +346,4 @@ networks:
   temporal-network:
     driver: bridge
     name: temporal-network
+    external: true
